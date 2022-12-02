@@ -1,3 +1,4 @@
 # ignore config.json
 config.json
 __pycache__
+*.log

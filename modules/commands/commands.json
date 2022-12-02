@@ -1,0 +1,14 @@
+{
+    "commands": [
+        {
+            "name": "pingu",
+            "type": 1,
+            "description": "Responds with pong! Measures Reaction Time."
+        },
+        {
+            "name":"hello",
+            "type":1,
+            "description":"Hello!"
+        }
+    ]
+}

@@ -1,0 +1,34 @@
+{
+    "api_version": 6,
+    "session_id": "f11074dbaf8d8c35fa05be0c21334516",
+    "user": {
+        "verified": true,
+        "username": "Enpeceeet",
+        "mfa_enabled": true,
+        "id": "1046192963648237698",
+        "flags": 0,
+        "email": null,
+        "discriminator": "1651",
+        "bot": true,
+        "avatar": "1f3aa6eeb500e44d776c1d7b47568e62"
+    },
+    "resume_gateway_url": "wss://gateway-us-east1-c.discord.gg",
+    "guilds": [
+        {
+            "unavailable": true,
+            "id": "484252787690045441"
+        },
+        {
+            "unavailable": true,
+            "id": "1012458697995337748"
+        },
+        {
+            "unavailable": true,
+            "id": "1045741557078294599"
+        },
+        {
+            "unavailable": true,
+            "id": "1046480227288748093"
+        }
+    ]
+}

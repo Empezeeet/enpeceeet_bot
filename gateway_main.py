@@ -5,84 +5,112 @@ import json
 import websocket
 import datetime
 import modules.logging
+import modules.gateway_handler as gh
+
+# Change Activity settings in config.json
+
+
+
+
+
+
 
 with open("config.json", "r") as config:
-    TOKEN = json.load(config)["token"]
+    loaded = json.load(config)
+    TOKEN = loaded["token"]
+    APPID = loaded["appid"]
+    AUTH_HEADER = {"Authorization": "Bot " + TOKEN}
+    ACTIVITY = loaded['activity']
 
 
-class GatewayHandler(threading.Thread):
-    def __init__(self):
-        print("[GATEWAY] Initializing...")
-        self.ws = websocket.WebSocket()
-        self.ws.connect('wss://gateway.discord.gg/?v=6&encording=json') 
-        event = self.receive_json_response(self.ws) # Receive Hello Event
-        # Identify 
-        identifyJSON = {
-            "op": 2,
-            "d": {
-                "token": TOKEN,
-                "intents": 513,
-                "properties": {
-                    "os": "linux",
-                    "browser": "Safari",
-                    "device": "BDB"
-                },
-                "presence": {
-                    "activities": [{
-                        "name": "Rewriting...",
-                        "type": 0
-                    }],
-                    "status": "online",
-                    "since": time.time(),
-                    "afk": False
-                },
-            }
-        }
-        self.send_json_request(self.ws, identifyJSON)
+
+
+handler = None
+try:
+          
+    if __name__ == "__main__":
+        handler = gh.GatewayHandler(TOKEN, APPID, ACTIVITY)
         
+        ready_event = handler.receive_json_response(handler.ws)
+        if (ready_event) and ready_event['t'] == "READY":
+            handler.logger.log("MAIN", "Initialization successfully completed.")
+            handler.logger.log("MAIN", "Connected to Discord API.")
+            handler.logger.log(
+                "MAIN", 
+                f"Connection Info:\n\n\tAPI Version: {ready_event['d']['v']}\n\tSessionID: {ready_event['d']['session_id']}\n\tSee more info in rundata.json\n"
+            )
+            handler.logger.log("MAIN", "")
+            with open("rundata.json", "w") as file:
+                data = {
+                    "api_version": ready_event['d']['v'],
+                    "session_id": ready_event['d']['session_id'],
+                    "user": ready_event['d']['user'],
+                    "resume_gateway_url": ready_event['d']['resume_gateway_url'],
+                    "guilds": ready_event['d']['guilds']
+                }
+                file.write(json.dumps(data, indent=4))
         
-        
-        self.start_heartbeating(self.ws, event['d']['heartbeat_interval']/1000) # I divide by 1000 because python sleep is in seconds
-        
-    def receive_json_response(self, ws):
-        response = ws.recv()
-        try:
-            if response:
-                return json.loads(response)
-        except ConnectionError as e:
-            ws.close()
-            print("[ERROR] Connection Error")
-            breakpoint()
-            exit()
-    def send_json_request(self, ws, request):
-        ws.send(json.dumps(request))
-        
-    def start_heartbeating(self, ws, interval):
-        print("[HEART] Heartbeat Begin...")
+        handler.logger.log("MAIN", "Starting event loop...")
         while True:
-            time.sleep(interval)
-            print("\n")
-            heartbeatJSON = {
-                "op":1,
-                "d": "null"
-            }
-            self.send_json_request(ws, heartbeatJSON)
-            print(f'[HEART] Heartbeat sent @ {datetime.datetime.now().time()}')
-            ack = self.receive_json_response(ws)
+            recv = handler.receive_json_response(handler.ws)
+            if not recv:
+                continue
             try:
-                if ack:
-                        print(f'[HEART] Heartbeat ACK received @ {datetime.datetime.now().time()}')
-            except TypeError as e:
-                pass
-            while not (ack and ack['op'] == 11):
-                ack = self.receive_json_response(ws)
-                print('[HEART] Waiting for ACK...', end='\r')
-                if ack and ack['op'] == 11:
-                    print(f'[HEART] Heartbeat ACK received @ {datetime.datetime.now().time()}')
-                    break
                 
-if __name__ == "__main__":
-    hanlder = GatewayHandler()
-    
-    while True:
-        pass
+                handler.logger.log("MAIN", f"Event Received: {recv['t']}")
+                match recv['t']:
+                    case "MESSAGE_CREATE":
+                        if recv['d']['content'] == "!ping":
+                            handler.logger.log("MAIN", "Updating Presence...")
+                            payload = {
+                                "op": 3,
+                                "d": {
+                                    "since": time.time(),
+                                    "activities": [{
+                                        "name": "Rewriting...",
+                                        "type": 1
+                                    }],
+                                    "status": "online",
+                                    "afk": False
+                                }
+                                }
+                            handler.send_json_request(handler.ws, payload)
+                    case "INTERACTION_CREATE":
+                        try:
+                            if recv['d']['type'] == 2:
+                                recv = recv['d']
+                                
+                                url = f"https://discord.com/api/v10/interactions/{recv['id']}/{recv['token']}/callback"
+                                
+                                # This is slash command.
+                                payload = {
+                                    "type":4,
+                                    "data": {
+                                        "content":"Command Received"
+                                    }
+                                }
+                                handler.logger.log("MAIN", "Command Received")
+                                url = f"https://discord.com/api/v10/interactions/{recv['id']}/{recv['token']}/callback"
+                                handler.logger.log("MAIN", f"Responsing to: {url}")
+                                req = requests.post(url, json=payload)
+                                handler.logger.log("MAIN", f"Command Response: {req.status_code}")
+                                
+                            else:
+                                handler.logger.log("MAIN", "Unknown Interaction Type")
+                        except KeyError as e:
+                            handler.logger.log("ERROR", "KeyError @ INTERACTION_CREATE")
+                            handler.logger.log("ERROR", recv)
+                            handler.logger.log("ERROR", e)
+                            pass
+                    
+                    case _:
+                        handler.logger.log("MAIN", "Event not handled")         
+            except TypeError as e:
+                handler.logger.log("ERROR", f"TypeError[main]: {e}")
+                pass
+            
+            
+            
+except KeyboardInterrupt:
+    handler.logger.log("MAIN", "User Interrupted program with Ctrl+C. Safe Exit initiated...")
+    handler.closeConnection()
