@@ -8,7 +8,7 @@
             "name": "Python: bieżący plik",
             "type": "python",
             "request": "launch",
-            "program": "C:/Users/pawel/Desktop/enpeceeet_v2/gateway_main.py",
+            "program": "gateway_main.py",
             "console": "externalTerminal",
             "justMyCode": true
         }

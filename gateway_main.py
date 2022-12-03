@@ -67,9 +67,14 @@ try:
                     
                 }
                 file.write(json.dumps(data, indent=4))
+        # Change presence to online...
+
+
+        
         handler.logger.log("MAIN", f"Initialization completed. ({round(time.time() - handler.start_time, 4)})")
         handler.logger.log("MAIN", colored("Everything OK", "green"))
         handler.logger.log("MAIN", "Starting event loop...")
+        handler.make_online()
         while True:
             recv = handler.receive_json_response(handler.ws)
             if not recv:
@@ -77,23 +82,7 @@ try:
             try:
                 
                 handler.logger.log("MAIN", f"Event Received: {recv['t']}")
-                match recv['t']:
-                    case "MESSAGE_CREATE":
-                        if recv['d']['content'] == "!ping":
-                            handler.logger.log("MAIN", "Updating Presence...")
-                            payload = {
-                                "op": 3,
-                                "d": {
-                                    "since": time.time(),
-                                    "activities": [{
-                                        "name": "Rewriting...",
-                                        "type": 1
-                                    }],
-                                    "status": "online",
-                                    "afk": False
-                                }
-                                }
-                            handler.send_json_request(handler.ws, payload)
+                match recv['t']:   
                     case "INTERACTION_CREATE":
                         try:
                             commandIDs = json.load(open("rundata.json", "r"))["commands"]
@@ -106,7 +95,7 @@ try:
                                 payload = {
                                     "type":4,
                                     "data": {
-                                        "content":"Command Received"
+                                        "content":handler.handle_command(recv)
                                     }
                                 }
                                 handler.logger.log("MAIN", "Command Received")

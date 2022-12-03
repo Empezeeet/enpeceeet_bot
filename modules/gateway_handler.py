@@ -46,7 +46,7 @@ class GatewayHandler(threading.Thread):
                         "details": "Details",
                         "buttons": self.activity["buttons"]
                     }],
-                    "status": self.ACTIVITY_STATUS,
+                    "status": "offline",
                     "since": time.time(),
                     "afk": False
                 }
@@ -75,7 +75,24 @@ class GatewayHandler(threading.Thread):
                 time.sleep(r.json()['retry_after']/1000)
             self.logger.log("DELCOM", f"Deleted command {command['name']}. Response: {r.status_code}. ({time.time() - start})")
             
-        
+    def make_online(self):
+        self.send_json_request(self.ws, {
+            "op": 3,
+            "d": {
+                "since": time.time(),
+                "activities": [{
+                    "name": self.ACTIVITY_NAME,
+                    "type": self.ACTIVITY_TYPE,
+                    "url": self.activity["url"],
+                    "created_at": self.start_time,
+                    "details": "Details",
+                    "buttons": self.activity["buttons"]
+                }],
+                "status": "online",
+                "afk": False
+            }
+        })
+        self.logger.log("GATEWAY", "Bot is now online")
     
     def setup_commands(self):
         url = f"https://discord.com/api/v10/applications/{self.APPID}/commands"
@@ -87,12 +104,22 @@ class GatewayHandler(threading.Thread):
             for command in loaded["commands"]:
                 self.logger.log("CLOADER", f"Loading command {command['name']}")
                 r = requests.post(url, headers=headers, json=command)
-                with open(r"C:\Users\pawel\Desktop\enpeceeet_v2\rundata.json", "r") as file:
+                with open(r"rundata.json", "r") as file:
                    data = json.load(file)
                     
                 self.logger.log("CLOADER", f"Loaded Command with result: {r.status_code}")
                 
-                
+    def handle_command(self, command):
+        match command['data']['name']:
+            case "pingu":
+                return "Pong!"
+            case "uptime":
+                return f"Uptime: {time.time() - self.start_time}"
+            case "hello":
+                return f"Hello, {command['member']['user']['username']}!"
+            case _:
+                return "Unknown command"
+
     def receive_json_response(self, ws):
         try: 
             

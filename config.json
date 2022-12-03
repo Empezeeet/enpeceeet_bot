@@ -1,0 +1,22 @@
+{
+    "token":"MTA0NjE5Mjk2MzY0ODIzNzY5OA.G0XhOk.Vq4DhcCDlRjvK2T8QPazvtaQ3CJzFX7qF54hXs",
+    "appid":"1046192963648237698",
+    
+    "activity": {
+        "status":"online",
+        "url":"https://google.com",
+        "type":0,
+        "name":"Gateway",
+        "buttons":[
+            {
+                "label":"Google",
+                "url":"https://google.com"
+            },
+            {
+                "label":"Discord",
+                "url":"https://discord.com"
+            }
+        ]
+
+    }
+}
