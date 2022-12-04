@@ -1,20 +1,22 @@
 {
     "token":"MTA0NjE5Mjk2MzY0ODIzNzY5OA.G0XhOk.Vq4DhcCDlRjvK2T8QPazvtaQ3CJzFX7qF54hXs",
     "appid":"1046192963648237698",
+    "version":"1.0.0",
     
     "activity": {
-        "status":"online",
-        "url":"https://google.com",
+        "name": "discord gateway",
         "type":0,
-        "name":"Gateway",
+        "status":"online",
+        "url":"https://discord.com/api/oauth2/authorize?client_id=1046192963648237698&permissions=1644971949559&scope=bot%20applications.commands",
+        "details":"Testing",
         "buttons":[
             {
-                "label":"Google",
-                "url":"https://google.com"
-            },
+                "label":"Zaproś mnie!",
+                "url":"https://discord.com/api/oauth2/authorize?client_id=1046192963648237698&permissions=1644971949559&scope=bot%20applications.commands"
+            }, 
             {
-                "label":"Discord",
-                "url":"https://discord.com"
+                "label":"Button 2",
+                "url":"https://google.com/"
             }
         ]
 

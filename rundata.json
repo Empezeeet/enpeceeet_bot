@@ -1,7 +1,9 @@
 {
-    "time": "2022-12-03 13:56:03.111525",
+    "time": "2022-12-04 15:39:16.224899",
     "api_version": 6,
-    "session_id": "5fb913f346ec1517c2fa148216c314dd",
+    "app_version": "1.0.0",
+    "session_id": "b84b8fb197be9a70c7438c0db99744e6",
+    "heartbeat_interval": 41.25,
     "user": {
         "verified": true,
         "username": "Enpeceeet",
@@ -13,7 +15,7 @@
         "bot": true,
         "avatar": "1f3aa6eeb500e44d776c1d7b47568e62"
     },
-    "resume_gateway_url": "wss://gateway-us-east1-b.discord.gg",
+    "resume_gateway_url": "wss://gateway-us-east1-c.discord.gg",
     "guilds": [
         {
             "unavailable": true,
@@ -33,9 +35,9 @@
         }
     ],
     "commands": [
-        "1048583385532092416",
-        "1048583387323043931",
-        "1048583389290168382",
-        "1048583392054227005"
+        "1048961749648420904",
+        "1048961750990598194",
+        "1048961752576049152",
+        "1048961754501222461"
     ]
 }

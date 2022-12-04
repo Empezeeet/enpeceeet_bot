@@ -10,7 +10,7 @@ from termcolor import colored
 import colorama
 # Change Activity settings in config.json
 
-
+start_time = time.time()
 colorama.just_fix_windows_console()
 
 with open("config.json", "r") as config:
@@ -19,6 +19,7 @@ with open("config.json", "r") as config:
     APPID = loaded["appid"]
     AUTH_HEADER = {"Authorization": "Bot " + TOKEN}
     ACTIVITY = loaded['activity']
+    VERSION = loaded['version']
 
 
 
@@ -27,25 +28,11 @@ handler = None
 try:
           
     if __name__ == "__main__":
-        handler = gh.GatewayHandler(TOKEN, APPID, ACTIVITY)
-        # Read lines 2-7 from fonts.txt and print them using handler.logger.log("GATEWAY", "message")
-        lines = [
-            "░██╗░░░░░░░██╗███████╗██╗░░░░░░█████╗░░█████╗░███╗░░░███╗███████╗",
-            "░██║░░██╗░░██║██╔════╝██║░░░░░██╔══██╗██╔══██╗████╗░████║██╔════╝",
-            "░╚██╗████╗██╔╝█████╗░░██║░░░░░██║░░╚═╝██║░░██║██╔████╔██║█████╗░░",
-            "░░████╔═████║░██╔══╝░░██║░░░░░██║░░██╗██║░░██║██║╚██╔╝██║██╔══╝░░",
-            "░░╚██╔╝░╚██╔╝░███████╗███████╗╚█████╔╝╚█████╔╝██║░╚═╝░██║███████╗",
-            "░░░╚═╝░░░╚═╝░░╚══════╝╚══════╝░╚════╝░░╚════╝░╚═╝░░░░░╚═╝╚══════╝"
-        ]
-        print("\n\n")
-        for line in lines:
-            print(line)
-        print("\n\n")
+        handler = gh.GatewayHandler(TOKEN, APPID, ACTIVITY, VERSION)
         
         
         ready_event = handler.receive_json_response(handler.ws)
         if (ready_event) and ready_event['t'] == "READY":
-            handler.logger.log("MAIN", "Initialization successfully completed.")
             handler.logger.log("MAIN", "Connected to Discord API.")
             handler.logger.log(
                 "MAIN", 
@@ -59,7 +46,9 @@ try:
                 data = {
                     "time": str(datetime.datetime.now()),
                     "api_version": ready_event['d']['v'],
+                    "app_version": VERSION,
                     "session_id": ready_event['d']['session_id'],
+                    "heartbeat_interval": handler.hb_interval,
                     "user": ready_event['d']['user'],
                     "resume_gateway_url": ready_event['d']['resume_gateway_url'],
                     "guilds": ready_event['d']['guilds'],
@@ -71,38 +60,33 @@ try:
 
 
         
-        handler.logger.log("MAIN", f"Initialization completed. ({round(time.time() - handler.start_time, 4)})")
-        handler.logger.log("MAIN", colored("Everything OK", "green"))
+        handler.logger.log("MAIN", colored(f"Initialization completed. ({round(time.time() - start_time, 4)})", "green"))
         handler.logger.log("MAIN", "Starting event loop...")
-        handler.make_online()
         while True:
             recv = handler.receive_json_response(handler.ws)
             if not recv:
                 continue
-            try:
                 
+            try:
+                handler.last_sequence = recv['s']
                 handler.logger.log("MAIN", f"Event Received: {recv['t']}")
                 match recv['t']:   
+                        
                     case "INTERACTION_CREATE":
                         try:
                             commandIDs = json.load(open("rundata.json", "r"))["commands"]
                             if recv['d']['type'] == 2 and recv['d']['data']['id'] in commandIDs:
                                 recv = recv['d']
-                                
-                                url = f"https://discord.com/api/v10/interactions/{recv['id']}/{recv['token']}/callback"
-                                
-                                # This is slash command.
-                                payload = {
-                                    "type":4,
-                                    "data": {
-                                        "content":handler.handle_command(recv)
-                                    }
-                                }
                                 handler.logger.log("MAIN", "Command Received")
                                 url = f"https://discord.com/api/v10/interactions/{recv['id']}/{recv['token']}/callback"
-                                handler.logger.log("MAIN", f"Responsing to: {url}")
-                                req = requests.post(url, json=payload)
+                                
+                                dzejson = handler.handle_command(recv)
+                                
+                                
+                                req = requests.post(url, json=dzejson, headers={"Content-Type": "application/json"})
                                 handler.logger.log("MAIN", f"Command Response: {req.status_code}")
+                                if req.status_code != 200:
+                                    handler.logger.log("MAIN", f"Command Response: {req.json()}")
                                 
                             else:
                                 handler.logger.log("MAIN", "Unknown Interaction Type")
@@ -111,9 +95,12 @@ try:
                             handler.logger.log(colored("ERROR", "red"), recv)
                             handler.logger.log(colored("ERROR", "red"), e)
                             pass
-                    
+                
                     case _:
-                        handler.logger.log("MAIN", "Event not handled")         
+                        if recv['op'] == 11:
+                            handler.logger.log("MAIN", "Heartbeat Acknowledged")
+                        else:
+                            handler.logger.log("MAIN", "Event not handled")         
             except TypeError as e:
                 handler.logger.log(colored("ERROR", "red"), f"TypeError[main]: {e}")
                 pass
@@ -123,3 +110,12 @@ try:
 except KeyboardInterrupt:
     handler.logger.log("MAIN", "User Interrupted program with Ctrl+C. Safe Exit initiated...")
     handler.closeConnection()
+    exit()
+except:
+    handler.logger.log("MAIN", colored("An error occured. Safe Exit initiated...", "red"))
+    exit()
+finally:
+    print("Thank you for using Enpeceeet Gateway!")
+    input("Press Enter to exit...")
+    exit()
+    

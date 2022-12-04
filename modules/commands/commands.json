@@ -16,22 +16,8 @@
             "description":"Uptime"
         },
         {
-            "name":"permissions",
-            "description":"Permissions command group",
-            "options": [
-                {
-                    "name":"user",
-                    "description":"User to check",
-                    "type":2,
-                    "options": [
-                        {
-                            "name":"get",
-                            "description":"Get user permissions",
-                            "type":1
-                        }
-                    ]
-                }
-            ]
+            "name":"cytat",
+            "type":2
         }
     ]
 }
