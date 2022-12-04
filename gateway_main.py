@@ -75,21 +75,38 @@ try:
                     case "INTERACTION_CREATE":
                         try:
                             commandIDs = json.load(open("rundata.json", "r"))["commands"]
-                            if recv['d']['type'] == 2 and recv['d']['data']['id'] in commandIDs:
-                                recv = recv['d']
-                                handler.logger.log("MAIN", "Command Received")
-                                url = f"https://discord.com/api/v10/interactions/{recv['id']}/{recv['token']}/callback"
-                                
-                                dzejson = handler.handle_command(recv)
-                                
-                                
-                                req = requests.post(url, json=dzejson, headers={"Content-Type": "application/json"})
-                                handler.logger.log("MAIN", f"Command Response: {req.status_code}")
-                                if req.status_code != 200:
-                                    handler.logger.log("MAIN", f"Command Response: {req.json()}")
-                                
-                            else:
-                                handler.logger.log("MAIN", "Unknown Interaction Type")
+                            match recv['d']['type']:
+                                case 2:
+                                    # COMMAND
+                                    if recv['d']['data']['id'] in commandIDs:
+                                        recv = recv['d']
+                                        handler.logger.log("MAIN", "Command Received")
+                                        url = f"https://discord.com/api/v10/interactions/{recv['id']}/{recv['token']}/callback"
+                                        
+                                        dzejson = handler.handle_command(recv)
+                                        
+                                        
+                                        req = requests.post(url, json=dzejson, headers={"Content-Type": "application/json"})
+                                        handler.logger.log("MAIN", f"Command Response: {req.status_code}")
+                                        if req.status_code > 204:
+                                            handler.logger.log("MAIN", f"Command Response: {req.json()}")
+                                        
+                                    else:
+                                        handler.logger.log("MAIN", "Unknown Interaction Type")
+                                case 5:
+                                    # MODAL SUBMIT
+                                    # There is only one modal and its for "cytaty"
+                                    recv = recv['d']
+                                    handler.logger.log("MAIN", "Modal Submit Received")
+                                    channelID = 1012458745248358461
+                                    message = {
+                                        "content": f"~ {recv['data']['components'][0]['components'][0]['value']}~\n\t\t- {recv['data']['components'][1]['components'][0]['value']}"
+                                    }
+                                    with open("test.json", "w") as file:
+                                        file.write(json.dumps(recv))
+                                    r = requests.post(f"https://discord.com/api/v10/channels/{channelID}/messages", json=message, headers=AUTH_HEADER)
+                                    r = requests.post(f"https://discord.com/api/v10/interactions/{recv['id']}/{recv['token']}/callback", json={"type": 4, "data": {"content": "Wysłano!"}}, headers={"Content-Type": "application/json"})
+                                    
                         except KeyError as e:
                             handler.logger.log(colored("ERROR", "red"), "KeyError @ INTERACTION_CREATE")
                             handler.logger.log(colored("ERROR", "red"), recv)
@@ -101,7 +118,7 @@ try:
                             handler.logger.log("MAIN", "Heartbeat Acknowledged")
                         else:
                             handler.logger.log("MAIN", "Event not handled")         
-            except TypeError as e:
+            except KeyError as e:
                 handler.logger.log(colored("ERROR", "red"), f"TypeError[main]: {e}")
                 pass
             
@@ -111,11 +128,6 @@ except KeyboardInterrupt:
     handler.logger.log("MAIN", "User Interrupted program with Ctrl+C. Safe Exit initiated...")
     handler.closeConnection()
     exit()
-except:
-    handler.logger.log("MAIN", colored("An error occured. Safe Exit initiated...", "red"))
-    exit()
-finally:
-    print("Thank you for using Enpeceeet Gateway!")
-    input("Press Enter to exit...")
-    exit()
+
+
     

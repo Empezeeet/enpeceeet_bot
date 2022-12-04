@@ -165,19 +165,41 @@ class GatewayHandler(threading.Thread):
                 payload = {
                     "type":9,
                     "data": {
-                        "title": "My Cool Modal",
+                        "title": "Dodaj Nowy Cytat!",
                         "custom_id": "cool_modal",
-                        "components": [{
-                            "type": 1,
-                            "custom_id": "name",
-                            "label": "Name",
-                            "style": 1,
-                            "min_length": 1,
-                            "max_length": 4000,
-                            "placeholder": "John",
-                            "required": true   # type: ignore
-                        }]
-                        }
+                        "components": [
+                            {
+                                "type": 1,
+                                "components": [
+                                    {
+                                        "type": 4,
+                                        "custom_id": "name",
+                                        "label": "Cytat",
+                                        "style": 1,
+                                        "min_length": 1,
+                                        "max_length": 4000,
+                                        "placeholder": "",
+                                        "required": True
+                                    }
+                                ]
+                            },
+                            {
+                                "type": 1,
+                                "components": [
+                                    {
+                                        "type": 4,
+                                        "custom_id": "user",
+                                        "label": "Użytkownik",
+                                        "style": 1,
+                                        "min_length": 1,
+                                        "max_length": 4000,
+                                        "placeholder": "",
+                                        "required": True
+                                    }
+                                ]
+                            }
+                        ]
+                    }
                 }
                 return payload
             case _:
