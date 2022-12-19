@@ -1,10 +1,11 @@
 {
+    "show_rate_limit_warning":true,
     "token":"MTA0NjE5Mjk2MzY0ODIzNzY5OA.G0XhOk.Vq4DhcCDlRjvK2T8QPazvtaQ3CJzFX7qF54hXs",
     "appid":"1046192963648237698",
     "version":"1.0.0",
-    
+    "name":"Enpeceeet",
     "activity": {
-        "name": "discord gateway",
+        "name": "Enpeceeet v1.0.0",
         "type":0,
         "status":"online",
         "url":"https://discord.com/api/oauth2/authorize?client_id=1046192963648237698&permissions=1644971949559&scope=bot%20applications.commands",

@@ -7,13 +7,13 @@ import json
 import datetime
 import random
 from termcolor import colored
-
 # ----------------------------------------------------------------------------------------------------------------------
 # DiscordAPI Gateway handler
 # by Empezeeet 2022
 
 class GatewayHandler(threading.Thread):
-    def __init__(self, token, appid, activity, version):
+    def __init__(self, token, appid, activity, version, show_limit_warning):
+        self.connected = False
         self.ACTIVITY_STATUS = activity['status']
         self.ACTIVITY_NAME = activity['name']
         self.ACTIVITY_TYPE = activity['type']
@@ -23,11 +23,14 @@ class GatewayHandler(threading.Thread):
         self.AHEAD = {"Authorization": f"Bot {self.TOKEN}"}
         self.start_time = time.time()
         self.logger = modules.logging.Logger(f"logs/log", "Enpeceeet", version)
+        if show_limit_warning:
+            self.logger.log("GATEWAY-WARN", colored("\n\tThis gateway handler is created for once-in-a-while launch.\n\tRate limits will occur if gateway is restarted too often.\n\tTo disable this message change \"show_rate_limit_warning\" to False.", "yellow"))
         self.last_sequence = None
         self.rate_limit_sum = 0
         self.logger.log("GATEWAY", "Initializing...")
         self.ws = websocket.WebSocket()
-        self.ws.connect('wss://gateway.discord.gg/?v=6&encording=json') 
+        self.ws.connect('wss://gateway.discord.gg/?v=6&encording=json')
+        self.VC_HANDLER = None 
         event = self.receive_json_response(self.ws) # Receive Hello Event
         # Identify 
         identifyJSON = {
@@ -62,9 +65,9 @@ class GatewayHandler(threading.Thread):
         self.hb_interval = event['d']['heartbeat_interval']/1000
         self.heartbeating = threading.Thread(target=self.start_heartbeating, args=(self.ws, self.hb_interval)) # I divide by 1000 because python sleep is in seconds
         self.heartbeating.start()
-        # Set commands
-        self.setup_commands2()
-        self.logger.log("GATEWAY", colored(f"Initialized after {time.time() - self.start_time} ({(time.time() - self.start_time) - self.rate_limit_sum})", "green"))
+        self.active_commands = []
+        
+        self.logger.log("GATEWAY", colored(f"Initialized after {time.time() - self.start_time} ({(time.time() - self.start_time) - self.rate_limit_sum})\n", "green"))
         self.logger.log("GATEWAY", "                                              ")
     def setup_commands2(self):
         url = f"https://discord.com/api/v10/applications/{self.APPID}/commands"
@@ -72,64 +75,56 @@ class GatewayHandler(threading.Thread):
             "Authorization": f"Bot {self.TOKEN}"
         }
         COMMANDS = requests.get(url, headers={"Authorization": f"Bot {self.TOKEN}"}).json()
-
+        
         with open("modules/commands/commands.json", "r") as file:
-            
-            
-            for command in json.load(file)['commands']:
-                for cmd in COMMANDS:
-                    while True:
-                        self.logger.log("CLOADER", f"Loading command {command['name']}")
-                    
-                        if cmd['name'] == command['name']:
-                            self.logger.log("CLOADER", f"Command {command['name']} already exists. Updating...\n")
-                            r = requests.patch(url, headers=headers, json=command)
-                            if r.status_code == 429:
-                                self.logger.log("CLOADER", colored(f"Rate limited, wait {r.json()['retry_after']} seconds", "yellow"))
-                                time.sleep(r.json()['retry_after'])
-                                self.rate_limit_sum += r.json()['retry_after']
-                                pass
-                        else: 
-                            self.logger.log("CLOADER", f"Creating command {command['name']}")
-                            r = requests.post(url, headers=headers, json=command)
-                            self.logger.log("CLOADER", f"Loaded Command with result: {r.status_code}")
-                            if r.status_code == 429:
-                                self.logger.log("CLOADER", colored(f"Rate limited. Waiting {r.json()['retry_after']} seconds", "yellow"))
-                                time.sleep(r.json()['retry_after'])
-                                self.rate_limit_sum += r.json()['retry_after']
-                                pass
-                            if r.status_code > 204 and r.status_code != 429:
-                                self.logger.log("CLOADER", colored(f"Error: {r.json()}", "red"))
-                                break
-                            break
-                        break
-                    break
-                        
-                    
-    
-    def setup_commands(self):
-        url = f"https://discord.com/api/v10/applications/{self.APPID}/commands"
-        headers = {
-            "Authorization": f"Bot {self.TOKEN}"
-        }
-        with open("modules/commands/commands.json", "r") as file:
-            loaded = json.load(file)
-            
-            for command in loaded["commands"]:
+            for loaded_command in json.load(file)['commands']:
+                self.active_commands.append(loaded_command["name"])
                 while True:
-                    self.logger.log("CLOADER", f"Loading command {command['name']}")
-                    r = requests.post(url, headers=headers, json=command)
+                    if loaded_command["name"] in [command["name"] for command in COMMANDS]:
+                        self.logger.log("CLOADER", f"Command {loaded_command['name']} already exists. Updating...")
+                        # Update command.
+                        r = requests.patch(url, headers=headers, json=loaded_command)
+                        if r.status_code == 429:
+                            # Rate limited,
+                            self.logger.log("CLOADER", colored(f"Rate limited, wait {r.json()['retry_after']} seconds", "yellow"))
+                            time.sleep(r.json()['retry_after'])
+                            self.rate_limit_sum += r.json()['retry_after']
+                            pass
+                    else:
+                        self.logger.log("CLOADER", f"Creating command {loaded_command['name']}")
+                        r = requests.post(url, headers=headers, json=loaded_command)
+                        self.logger.log("CLOADER", f"Loaded Command with result: {r.status_code}")
+
+                        if r.status_code == 429:
+                            # Rate limited
+                            self.logger.log("CLOADER", colored(f"Rate limited. Waiting {r.json()['retry_after']} seconds", "yellow"))
+                            time.sleep(r.json()['retry_after'])
+                            self.rate_limit_sum += r.json()['retry_after']
+                            pass
                         
-                    self.logger.log("CLOADER", f"Loaded Command with result: {r.status_code}")
-                    if r.status_code == 429:
-                        self.logger.log("CLOADER", colored(f"Rate limited. Waiting {r.json()['retry_after']} seconds", "yellow"))
-                        time.sleep(r.json()['retry_after'])
-                        self.rate_limit_sum += r.json()['retry_after']
-                        pass
-                    if r.status_code > 204:
-                        self.logger.log("CLOADER", colored(f"Error: {r.json()}", "red"))
-                        break
+                        if r.status_code > 204 and r.status_code != 429:
+                            # Error
+                            self.logger.log("CLOADER", colored(f"Error: {r.json()}", "red"))
+                            break
+                    
                     break
+                        # Commands does not exist. Create it.
+            
+            for command in COMMANDS:
+                while True:
+                    if command['name'] not in self.active_commands:
+                        self.logger.log("CLOADER", f"Command {command['name']} does not exist in the loaded commands. Deleting...")
+                        r = requests.delete(f"{url}/{command['id']}", headers=headers)
+                        if r.status_code == 429:
+                            # Rate limited
+                            self.logger.log("CLOADER", colored(f"Rate limited. Waiting {r.json()['retry_after']} seconds", "yellow"))
+                            time.sleep(r.json()['retry_after'])
+                            self.rate_limit_sum += r.json()['retry_after']
+                            pass
+                    else:
+                        self.logger.log("CLOADER", f"Command {command['name']} exists in the loaded commands. Skipping...")
+                    break
+        print(f"ACTIVE COMMANDS: \n {self.active_commands}\n")
                 
     def handle_command(self, command):
         match command['data']['name']:
@@ -141,8 +136,7 @@ class GatewayHandler(threading.Thread):
                         "content": "Pong!"
                     }
                 }
-                return payload
-                        
+                return payload           
             case "uptime":
                 payload = {
                     "type":4,
@@ -205,40 +199,33 @@ class GatewayHandler(threading.Thread):
             case _:
                 self.logger.log("CHANDLER", f"Unknown command {command['data']['name']}")
                 return {"type":1, "data": {"content": "Unknown command"}}
-
+    def hello_message(self, event):
+        channel_id = 1051570042367651940
+        r = requests.post(f"https://discord.com/api/v10/channels/{channel_id}/messages", headers=self.AHEAD, json={"content": f"Witaj, <@{event['d']['request']['user_id']}>!"})   
+    
+    
     def receive_json_response(self, ws):
+        response = None
         try: 
-            
             response = ws.recv()
-            
         except websocket.WebSocketConnectionClosedException as e:
             self.logger.log("GATEWAY", "Connection Closed")
             self.logger.log(colored("GERROR", "red"), e)
             ws.close()
-            exit()
+            breakpoint()
         try:
-            if response:
-                try:
-                    if response['op'] == 11:
-                        self.logger.log("HEART", "Received heartbeat ack")
-                        self.logger.log("HEART", response)
-                        return response
-                except TypeError:
-                    pass
-                try:
-                    return json.loads(response)
-                except AttributeError as ae:
-                    self.logger.log("GATEWAY-WARN", f"Attribute Error: {ae}\n Response: \n{response}\n")
-                    return response
+            self.last_sequence = json.loads(response)['s']
+            try:
+                return json.loads(response)
+            except AttributeError as ae:
+                self.logger.log("GATEWAY-WARN", f"Attribute Error: {ae}\n Response: \n{response}\n")
+                return response
         except ConnectionError as e:
             ws.close()
             self.logger.log("ERROR", "Connection Error")
             breakpoint()
-            exit()
     def send_json_request(self, ws, request):
         ws.send(json.dumps(request))
-    def closeConnection(self):
-        pass
     def start_heartbeating(self, ws, interval):
         self.logger.log("HEART", "Heartbeating Began...")
         # Sleep for interval * random value betweeen 0, 1
@@ -257,8 +244,3 @@ class GatewayHandler(threading.Thread):
             }
             self.send_json_request(ws, heartbeatJSON)
             self.logger.log("HEART", f'Heartbeat sent @ {datetime.datetime.now().time()}')
-            # while not (ack and ack['op'] == 11):
-            #     ack = self.receive_json_response(ws)
-            #     if ack and ack['op'] == 11:
-            #         self.logger.log('HEART', f'Heartbeat ACK received @ {datetime.datetime.now().time()}')
-            #         break

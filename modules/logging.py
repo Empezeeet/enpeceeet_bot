@@ -4,6 +4,8 @@ class Logger:
     
     def __init__(self, filename, name, version):
         self.filepath = f"{filename}_{hex(int(time.time()))}.log"
+
+        
         self.name = name
         self.version = version
         with open(self.filepath, "a") as logfile:
@@ -21,7 +23,7 @@ class Logger:
             print(f"====================\n\n")
     def log(self, level, message):
         with open(self.filepath, "a") as logfile:
-            logfile.write(f"[ {level} @ {hex(int(time.time()))} ]: {message}\n")
+            logfile.write(f"[ {level} @ {hex(int(time.time()))} ]: {message}\n")  
             print(f"[ {level} @ {hex(int(time.time()))} ]: {message}")
             
 if __name__ == "__main__":
