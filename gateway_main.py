@@ -69,9 +69,8 @@ if (ready_event) and ready_event['t'] == "READY":
     
     with open("configs/rundata.json", "w") as file:
         r = requests.get(f"https://discord.com/api/v10/applications/{APPID}/commands", headers=AUTH_HEADER).json()
-        commands = []
-        for command in r:
-            commands.append(command['id'])
+        commands = [cmd['id'] for cmd in r]
+        
         data = {
             "time": str(datetime.datetime.now()),
             "start_timestamp": start_time,
@@ -85,6 +84,7 @@ if (ready_event) and ready_event['t'] == "READY":
             "commands":commands
             
         }
+        
         file.write(json.dumps(data, indent=4))
         handler.connected = True
     handler.setup_commands2()
@@ -101,9 +101,7 @@ try:
             handler.logger.log("MAIN", "Waiting for event...")
             
             recv = handler.receive_json_response(handler.ws)
-            if not recv:
-                handler.logger.log("MAIN", "recv in None...")
-                continue
+            if not recv: continue # If Recv is nothing just continue.9
                 
             try:
                 handler.last_sequence = recv['s']
