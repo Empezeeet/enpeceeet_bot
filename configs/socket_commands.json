@@ -1,0 +1,21 @@
+{
+    "cmds": [
+        {
+            "name":"online",
+            "description":"Set bot's status to Online"
+        }, 
+        {
+            "name":"dnd",
+            "description":"Set bot's status to Do Not Disturb"
+        }, 
+        {
+            "name":"stop",
+            "description":"Stop bot"
+        },
+        {
+            "name":"uptime",
+            "description":"Get bot's uptime"
+        }
+    ]
+    
+}

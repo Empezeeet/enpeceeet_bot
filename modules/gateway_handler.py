@@ -44,19 +44,18 @@ class GatewayHandler(threading.Thread):
                     "device": "BDB"
                 },
                 "presence": {
+                    "since": time.time(),
                     "activities": [{
                         "name": self.ACTIVITY_NAME,
                         "type": self.ACTIVITY_TYPE,
-                        "url": self.activity["url"],
-                        "created_at": self.start_time,
-                        "details": "Details",
-                        "buttons": self.activity["buttons"]
+                        "url": self.activity["url"]
                     }],
-                    "status": "offline",
-                    "since": time.time(),
+                    "status": "online",
                     "afk": False
                 }
-            }
+            },
+            "s": self.last_sequence,
+            "t": None
         }
         
         
@@ -76,7 +75,7 @@ class GatewayHandler(threading.Thread):
         }
         COMMANDS = requests.get(url, headers={"Authorization": f"Bot {self.TOKEN}"}).json()
         
-        with open("modules/commands/commands.json", "r") as file:
+        with open("configs/commands.json", "r") as file:
             for loaded_command in json.load(file)['commands']:
                 self.active_commands.append(loaded_command["name"])
                 while True:
@@ -124,7 +123,6 @@ class GatewayHandler(threading.Thread):
                     else:
                         self.logger.log("CLOADER", f"Command {command['name']} exists in the loaded commands. Skipping...")
                     break
-        print(f"ACTIVE COMMANDS: \n {self.active_commands}\n")
                 
     def handle_command(self, command):
         match command['data']['name']:
@@ -203,6 +201,7 @@ class GatewayHandler(threading.Thread):
         channel_id = 1051570042367651940
         r = requests.post(f"https://discord.com/api/v10/channels/{channel_id}/messages", headers=self.AHEAD, json={"content": f"Witaj, <@{event['d']['request']['user_id']}>!"})   
     
+
     
     def receive_json_response(self, ws):
         response = None
@@ -213,13 +212,19 @@ class GatewayHandler(threading.Thread):
             self.logger.log(colored("GERROR", "red"), e)
             ws.close()
             breakpoint()
+            
         try:
             self.last_sequence = json.loads(response)['s']
-            try:
-                return json.loads(response)
-            except AttributeError as ae:
-                self.logger.log("GATEWAY-WARN", f"Attribute Error: {ae}\n Response: \n{response}\n")
-                return response
+            return json.loads(response)
+        
+        except AttributeError as ae:
+            self.logger.log("GATEWAY-WARN", f"Attribute Error: {ae}\n Response: \n{response}\n")
+            return response
+        
+        except json.JSONDecodeError as jde:
+            self.logger.log("ERROR", "JSON DECODE ERROR")
+            self.logger.log("ERROR", f"\n{jde}\n{response}\n")
+            
         except ConnectionError as e:
             ws.close()
             self.logger.log("ERROR", "Connection Error")

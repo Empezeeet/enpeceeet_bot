@@ -1,8 +1,9 @@
 {
-    "time": "2022-12-19 20:49:52.986556",
+    "time": "2022-12-20 16:55:24.843449",
+    "start_timestamp": 1671551723.7908201,
     "api_version": 6,
     "app_version": "1.0.0",
-    "session_id": "28908b523a0caef3c9933828a4cfaf48",
+    "session_id": "b6a7ff695a06583f1e2fed53867222c7",
     "heartbeat_interval": 41.25,
     "user": {
         "verified": true,

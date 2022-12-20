@@ -48,7 +48,7 @@ class VoiceHandler(threading.Thread):
         logger.log("VC ", colored("[2/7] Sending Hello Event", "cyan"))
         # Send Hello
         hello_event = json.loads(self.socket.recv())
-        with open("rundata.json", "r+") as file:
+        with open("configs/rundata.json", "r+") as file:
             prev_file = json.load(file)
             
             prev_file['vc_heartbeat_interval'] = hello_event['d']['heartbeat_interval']
@@ -65,7 +65,7 @@ class VoiceHandler(threading.Thread):
             self.heartbeat_thread.start()
             self.logger.log("VC ", colored("[4/8] Heartbeat Thread Started", "cyan"))
         logger.log("VC ", colored("[5/8] Successfully saved data to rundata.json", "cyan"))
-        with open("rundata.json", "r") as file:
+        with open("configs/rundata.json", "r") as file:
             data = json.load(file)
             identify = {    
                 "op": 0,

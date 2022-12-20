@@ -25,6 +25,8 @@ class Logger:
         with open(self.filepath, "a") as logfile:
             logfile.write(f"[ {level} @ {hex(int(time.time()))} ]: {message}\n")  
             print(f"[ {level} @ {hex(int(time.time()))} ]: {message}")
+    def getFile(self) -> str:
+        return self.filepath
             
 if __name__ == "__main__":
     logger = Logger("dev", "DevTest")
