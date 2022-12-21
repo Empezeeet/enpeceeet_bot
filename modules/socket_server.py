@@ -24,7 +24,7 @@ class CommandServer:
         self.IP = IP
         self.PORT = PORT
         self.passw = password
-        self.log("Created Password: " + self.passw)
+        self.log(f"Created Password: {colored(self.passw, color='white', attrs=['reverse'])}")
         self.server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.server.bind((str(IP), int(PORT)))
         

@@ -23,11 +23,11 @@ start_time = time.time()
 just_fix_windows_console()
 handler = None
 with open("configs/config.json", "r") as config:
-    loaded = json.load(config)
-    TOKEN = loaded["token"]
-    APPID = loaded["appid"]
+    loaded = json.loads(config.read())
+    TOKEN = loaded["bot"]["token"]
+    APPID = loaded["bot"]["id"]
     AUTH_HEADER = {"Authorization": "Bot " + TOKEN}
-    ACTIVITY = loaded['activity']
+    ACTIVITY = loaded["activity"]
     VERSION = loaded['version']
     
     handler = gh.GatewayHandler(TOKEN, APPID, ACTIVITY, VERSION, loaded["show_rate_limit_warning"])
@@ -63,7 +63,11 @@ if (ready_event) and ready_event['t'] == "READY":
     handler.logger.log("MAIN", "Connected to Discord API.")
     handler.logger.log(
         "MAIN", 
-        f"Connection Info:\n\n\tAPI Version: {ready_event['d']['v']}\n\tSessionID: {ready_event['d']['session_id']}\n\tSee more info in rundata.json\n"
+        f"""
+        Connection Info:\n
+        \tAPI Version: {ready_event['d']['v']}
+        \tSessionID: {ready_event['d']['session_id']}
+        \t{colored("See more info in rundata.json", attrs=["reverse"])}\n"""
     )
     # Set commands
     
@@ -139,8 +143,7 @@ try:
                             handler.logger.log(colored("ERROR", "red"), "KeyError @ INTERACTION_CREATE")
                             handler.logger.log(colored("ERROR", "red"), recv)
                             handler.logger.log(colored("ERROR", "red"), e)
-                    case "GUILD_JOIN_REQUEST_UPDATE":
-                        handler.hello_message(recv)
+
                     case _:
                         if recv['op'] == 11:
                             handler.logger.log("MAIN", "Heartbeat Acknowledged")

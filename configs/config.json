@@ -1,0 +1,25 @@
+{
+    "show_rate_limit_warning":true,
+    "command_server": {
+        "enabled":true,
+        "password": "auto",
+        "port": "8080",
+        "ip": "auto"
+    },
+    "bot": {
+        "token":"MTA0NjE5Mjk2MzY0ODIzNzY5OA.G0XhOk.Vq4DhcCDlRjvK2T8QPazvtaQ3CJzFX7qF54hXs",
+        "id":"1046192963648237698",
+        "discriminator":"1651"
+    },
+    "version":"1.1.0",
+    "owner": {
+        "id":"484252135131971584"
+    },
+    "name":"Enpeceeet",
+    "activity": {
+        "name": "Enpeceeet v1.1.0",
+        "type":0,
+        "status":"online",
+        "url":"https://discord.com/api/oauth2/authorize?client_id=1046192963648237698&permissions=8&redirect_uri=http%3A%2F%2Flocalhost%3A8000%2Fredirect&response_type=code&scope=identify%20guilds%20bot%20email%20connections%20applications.commands"
+    }
+}

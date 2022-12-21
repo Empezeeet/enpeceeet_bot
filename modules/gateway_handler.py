@@ -20,6 +20,7 @@ class GatewayHandler(threading.Thread):
         self.activity = activity
         self.TOKEN = token
         self.APPID = appid
+        self.last_response = None
         self.AHEAD = {"Authorization": f"Bot {self.TOKEN}"}
         self.start_time = time.time()
         self.logger = modules.logging.Logger(f"logs/log", "Enpeceeet", version)
@@ -197,10 +198,6 @@ class GatewayHandler(threading.Thread):
             case _:
                 self.logger.log("CHANDLER", f"Unknown command {command['data']['name']}")
                 return {"type":1, "data": {"content": "Unknown command"}}
-    def hello_message(self, event):
-        channel_id = 1051570042367651940
-        r = requests.post(f"https://discord.com/api/v10/channels/{channel_id}/messages", headers=self.AHEAD, json={"content": f"Witaj, <@{event['d']['request']['user_id']}>!"})   
-    
 
     
     def receive_json_response(self, ws):
@@ -215,6 +212,33 @@ class GatewayHandler(threading.Thread):
             
         try:
             self.last_sequence = json.loads(response)['s']
+            
+            if json.loads(response)['op'] == 7:
+                self.logger.log("GATEWAY", colored(f"Received reconnect request (After {time.time() - self.start_time}). Reconnecting...", "yellow"))
+                # Send resume event
+                with open("configs/rundata.json", "r") as rundata: 
+                    rundata = json.loads(rundata.read())
+                    self.ws.connect(f"{rundata['resume_gateway_url']}/?v=6&encording=json")
+                    self.send_json_request(self.ws, {
+                        "op":6,
+                        "d": {
+                            "token": rundata['token'],
+                            "session_id": rundata['session_id'],
+                            "seq":self.last_sequence
+                        }
+                    })
+                    response = self.ws.recv()
+                    if json.loads(response)['op'] == 9:
+                        self.logger.log("GATEWAY", colored("Cannot resume. Disconnecting...", "red"))
+                        self.ws.close()
+                        ws.close()
+                        breakpoint()
+                
+            
+            
+            
+            
+            
             return json.loads(response)
         
         except AttributeError as ae:

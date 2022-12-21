@@ -1,0 +1,54 @@
+{
+    't': 'MESSAGE_CREATE',
+    's': 6,
+    'op': 0,
+    'd': {
+        'type': 0,
+        'tts': False,
+        'timestamp': '2022-12-21T18:17:46.718000+00:00',
+        'referenced_message': None,
+        'pinned': False,
+        'nonce': '1055187342848950272',
+        'mentions': [],
+        'mention_roles': [],
+        'mention_everyone': False,
+        'member': {
+            'roles': [
+                '1055047383995666434',
+                '1055161324453236867',
+                '1055100205999075428',
+                '1055161227308974211',
+                '1055047190273331220',
+                '1055057094384033822',
+                '1055161590468587610',
+                '1055100155063443486'
+            ],
+            'premium_since': None,
+            'pending': False,
+            'nick': None,
+            'mute': False,
+            'joined_at': '2022-12-20T22:14:42.208000+00:00',
+            'flags': 0,
+            'deaf': False,
+            'communication_disabled_until': None,
+            'avatar': None
+        },
+        'id': '1055187341800648785',
+        'flags': 0,
+        'embeds': [],
+        'edited_timestamp': None,
+        'content': 'wow',
+        'components': [],
+        'channel_id': '1054884578441056330',
+        'author': {
+            'username': 'Empezeeet',
+            'public_flags': 4194432,
+            'id': '484252135131971584',
+            'discriminator': '8540',
+            'avatar_decoration': 'a_5ba11fabc18f76093b2533efdd765e76',
+            'avatar': '0198eb5da9e457df8a1c27856380c16c'
+        },
+        'attachments': [],
+        'guild_id': '1054884577967083600'
+    }
+}

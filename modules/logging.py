@@ -23,7 +23,10 @@ class Logger:
             print(f"====================\n\n")
     def log(self, level, message):
         with open(self.filepath, "a") as logfile:
-            logfile.write(f"[ {level} @ {hex(int(time.time()))} ]: {message}\n")  
+            try:
+                logfile.write(f"[ {level} @ {hex(int(time.time()))} ]: {message}\n") 
+            except UnicodeEncodeError as uee:
+                logfile.write(f"ERROR OCCURED: {uee}\n")
             print(f"[ {level} @ {hex(int(time.time()))} ]: {message}")
     def getFile(self) -> str:
         return self.filepath
